@@ -1,17 +1,21 @@
-# Scrollable Bottom Sheet
-
-This is a temporary workaround to achieve Scrollable Persistent Bottom Sheet that i created.
-
-## Installation
-
-First, add `scrollable_bottom_sheet` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
-
 ```
-scrollable_bottom_sheet: ^0.0.2
-```
+import 'package:flutter/material.dart';
+import 'package:scrollable_bottom_sheet/scrollable_bottom_sheet.dart';
 
-## Example
-```
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(home: BottomSheetDemo());
+  }
+}
+
+class BottomSheetDemo extends StatefulWidget {
+  @override
+  _BottomSheetDemoState createState() => _BottomSheetDemoState();
+}
+
 class _BottomSheetDemoState extends State<BottomSheetDemo> {
   bool _bottomSheetActive = false;
 
@@ -104,4 +108,5 @@ class _BottomSheetDemoState extends State<BottomSheetDemo> {
         ));
   }
 }
+
 ```
