@@ -9,3 +9,7 @@
 ## 0.0.3
 
 * Minimum feature and animation control from the outside added
+
+## 0.0.4
+
+* Bug Fixes

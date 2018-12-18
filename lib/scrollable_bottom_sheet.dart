@@ -124,7 +124,8 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                   _animateTo(targetHeight, () {
                     if ((targetHeight == 0.0 ||
                             targetHeight == _minimumHeight) &&
-                        _autoPop) Navigator.pop(context);
+                        _autoPop)
+                      Navigator.pop(context);
                   });
                 }
 
@@ -211,7 +212,8 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
 
   _animateTo(double targetHeight, VoidCallback animationComplete) {
     if (_scrollController.hasClients && _scrollController.position.pixels > 0) {
-      _scrollController.animateTo(0.0, duration: Duration(milliseconds: 200), curve: Curves.ease);
+      _scrollController.animateTo(0.0,
+          duration: Duration(milliseconds: 200), curve: Curves.ease);
     }
 
     AnimationController animationController = AnimationController(
@@ -232,15 +234,19 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
 
     animationController.forward();
 
-    zeroScale.addListener(() {
+    var listener = () {
       if (this.mounted) {
         setState(() {
           _currentHeight = zeroScale.value;
-          if (zeroScale.value == targetHeight) {
+          if (zeroScale.value == targetHeight &&
+              zeroScale.status == AnimationStatus.completed) {
             animationComplete();
+            animationController.dispose();
           }
         });
       }
-    });
+    };
+
+    zeroScale.addListener(listener);
   }
 }

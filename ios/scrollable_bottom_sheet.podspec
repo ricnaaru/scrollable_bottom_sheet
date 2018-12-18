@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'scrollable_bottom_sheet'
-  s.version          = '0.0.3'
+  s.version          = '0.0.4'
   s.summary          = 'Scrollable Persistent Bottom Sheet'
   s.description      = <<-DESC
 Scrollable Persistent Bottom Sheet
