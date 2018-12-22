@@ -17,3 +17,7 @@
 ## 0.0.5
 
 * Bug Fixes, add callback feature, and renaming some
+
+## 0.0.6
+
+* Fling scroll feature added

@@ -6,6 +6,8 @@ typedef StateCallback = void Function(ScrollState state);
 enum ScrollDirection { none, up, down }
 enum ScrollState { full, half, minimum }
 
+const double _kScrollTolerance = 100.0;
+
 class ScrollableBottomSheet extends StatefulWidget {
   /// The Bottom Sheet's height when first open
   /// Must not be null
@@ -108,8 +110,6 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
 
   @override
   Widget build(BuildContext context) {
-    _scrollController = ScrollController();
-
     if (_requestToFull) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _animateTo(_fullHeight);
@@ -139,9 +139,18 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
         _currentHeight = widget.minimumHeight;
       }
 
+      _currentHeight = _currentHeight.clamp(widget.minimumHeight, _fullHeight);
+
       return Container(
           height: _currentHeight,
           child: GestureDetector(
+              onTapDown: (TapDownDetails details) {
+                if (_scrollController.hasClients) {
+                  _scrollController.animateTo(_scrollController.position.pixels,
+                      duration: Duration(milliseconds: 200),
+                      curve: Curves.ease);
+                }
+              },
               onVerticalDragEnd: (DragEndDetails details) {
                 double targetHeight;
                 if (_currentHeight <= widget.halfHeight) {
@@ -172,6 +181,23 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                             targetHeight == _minimumHeight) &&
                         widget.autoPop) Navigator.pop(context);
                   });
+                } else {
+                  if (_currentHeight >= _fullHeight &&
+                      details.velocity.pixelsPerSecond.dy != 0.0) {
+                    if (_scrollController.hasClients) {
+                      double currentScroll = _scrollController.position.pixels;
+                      double veloc = details.velocity.pixelsPerSecond.dy * 0.2;
+                      double targetScroll = (currentScroll + (veloc * -1))
+                          .clamp(
+                              0.0,
+                              _scrollController.position.maxScrollExtent +
+                                  _kScrollTolerance);
+
+                      _scrollController.animateTo(targetScroll,
+                          duration: Duration(milliseconds: 1000),
+                          curve: Curves.fastOutSlowIn);
+                    }
+                  }
                 }
 
                 _lastScrollDirection = ScrollDirection.none;
@@ -230,7 +256,13 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
               child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: NeverScrollableScrollPhysics(),
-                  child: widget.child)));
+                  child: Column(children: [
+                    widget.child,
+                    Container(
+                      height: widget.minimumHeight,
+                      color: Colors.transparent,
+                    )
+                  ]))));
     });
 
     return child;
