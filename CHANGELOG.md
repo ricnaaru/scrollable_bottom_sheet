@@ -13,3 +13,7 @@
 ## 0.0.4
 
 * Bug Fixes
+
+## 0.0.5
+
+* Bug Fixes, add callback feature, and renaming some
