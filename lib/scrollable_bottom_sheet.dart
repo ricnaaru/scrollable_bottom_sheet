@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 typedef AnimationCallback = void Function(double value);
@@ -6,7 +9,85 @@ typedef StateCallback = void Function(ScrollState state);
 enum ScrollDirection { none, up, down }
 enum ScrollState { full, half, minimum }
 
-const double _kScrollTolerance = 100.0;
+class ScrollableBottomSheetByContent extends StatefulWidget {
+  final Widget header;
+  final Widget content;
+  final GlobalKey<ScrollableBottomSheetState> scrollableKey;
+  final StateCallback callback;
+  final bool snapAbove;
+  final bool snapBelow;
+  final bool autoPop;
+  final ScrollState scrollTo;
+
+  ScrollableBottomSheetByContent(this.header, this.content,
+      {Key key,
+      bool snapAbove,
+      bool snapBelow,
+      bool autoPop,
+      this.callback,
+      ScrollState scrollTo})
+      : scrollableKey = key is GlobalKey<ScrollableBottomSheetState>
+            ? key
+            : GlobalKey<ScrollableBottomSheetState>(),
+        this.snapAbove = snapAbove ?? true,
+        this.snapBelow = snapBelow ?? true,
+        this.autoPop = autoPop ?? true,
+        this.scrollTo = scrollTo ?? ScrollState.minimum;
+
+  @override
+  State<StatefulWidget> createState() => _ScrollableBottomSheetByContentState();
+}
+
+class _ScrollableBottomSheetByContentState
+    extends State<ScrollableBottomSheetByContent> {
+  BuildContext _headerContext;
+  BuildContext _contentContext;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.scrollableKey.currentState.minimumHeight =
+          _headerContext.size.height;
+      widget.scrollableKey.currentState.halfHeight =
+          _headerContext.size.height + _contentContext.size.height;
+      if (widget.scrollTo == ScrollState.minimum) {
+        widget.scrollableKey.currentState.animateToMinimum(context);
+      } else if (widget.scrollTo == ScrollState.half) {
+        widget.scrollableKey.currentState.animateToHalf(context);
+      } else if (widget.scrollTo == ScrollState.full) {
+        widget.scrollableKey.currentState.animateToFull(context);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScrollableBottomSheet(
+      key: widget.scrollableKey,
+      snapAbove: widget.snapAbove,
+      snapBelow: widget.snapBelow,
+      autoPop: widget.autoPop,
+      callback: widget.callback,
+      child: Column(children: [
+        Builder(
+          builder: (BuildContext context) {
+            _headerContext = context;
+            return widget.header;
+          },
+        ),
+        Builder(
+          builder: (BuildContext context) {
+            _contentContext = context;
+            return widget.content;
+          },
+        ),
+      ]),
+      halfHeight: 0.0,
+    );
+  }
+}
 
 class ScrollableBottomSheet extends StatefulWidget {
   /// The Bottom Sheet's height when first open
@@ -68,6 +149,13 @@ class ScrollableBottomSheet extends StatefulWidget {
   /// See [ScrollState], [halfHeight], [minimumHeight]
   final ScrollState firstScrollTo;
 
+  /// If this true, fullHeight won't exceed child's height
+  ///
+  /// If this false, it'll always scrollable to fullscreen height
+  ///
+  /// See [_fullHeight]
+  final bool mayExceedChildHeight;
+
   const ScrollableBottomSheet(
       {Key key,
       @required this.halfHeight,
@@ -77,14 +165,15 @@ class ScrollableBottomSheet extends StatefulWidget {
       bool autoPop,
       double minimumHeight,
       this.callback,
-      ScrollState scrollTo})
-      : assert(halfHeight > 0),
-        assert(child != null),
+      ScrollState scrollTo,
+      bool mayExceedChildHeight})
+      : assert(child != null),
         this.minimumHeight = minimumHeight ?? 0.0,
         this.snapAbove = snapAbove ?? true,
         this.snapBelow = snapBelow ?? true,
         this.autoPop = autoPop ?? true,
         this.firstScrollTo = scrollTo ?? ScrollState.half,
+        this.mayExceedChildHeight = mayExceedChildHeight ?? false,
         super(key: key);
 
   @override
@@ -95,10 +184,21 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
     with TickerProviderStateMixin {
   double _currentHeight;
   double _minimumHeight;
+  double _halfHeight;
   bool _requestToFull = false;
   double _fullHeight;
+  double _childHeight;
   ScrollController _scrollController = ScrollController();
   ScrollState _currentState;
+  BuildContext _headerContext;
+
+  set minimumHeight(double newMinimumHeight) {
+    _minimumHeight = newMinimumHeight;
+  }
+
+  set halfHeight(double newHalfHeight) {
+    _halfHeight = newHalfHeight;
+  }
 
   ScrollDirection _lastScrollDirection = ScrollDirection.none;
 
@@ -106,6 +206,13 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
   void initState() {
     super.initState();
     _minimumHeight = widget.minimumHeight ?? 0.0;
+    _halfHeight = widget.halfHeight ?? 0.0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _childHeight = _headerContext.size.height;
+
+      _currentState = widget.firstScrollTo;
+      if (widget.callback != null) widget.callback(_currentState);
+    });
   }
 
   @override
@@ -117,21 +224,19 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
       _requestToFull = false;
     }
 
-    if (_currentHeight == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _currentState = widget.firstScrollTo;
-        if (widget.callback != null) widget.callback(_currentState);
-      });
-    }
-
     Widget child = LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-      _fullHeight = constraints.maxHeight;
+      if (widget.mayExceedChildHeight) {
+        _fullHeight = constraints.maxHeight;
+      } else {
+        _fullHeight =
+            math.min(_childHeight ?? _minimumHeight, constraints.maxHeight);
+      }
 
       //for the first run
       if (_currentHeight == null) {
         _currentHeight = widget.firstScrollTo == ScrollState.half
-            ? widget.halfHeight
+            ? _halfHeight
             : widget.firstScrollTo == ScrollState.full
                 ? _fullHeight
                 : widget.minimumHeight;
@@ -139,28 +244,27 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
         _currentHeight = widget.minimumHeight;
       }
 
-      _currentHeight = _currentHeight.clamp(widget.minimumHeight, _fullHeight);
+      _currentHeight = _currentHeight.clamp(_minimumHeight, _fullHeight);
 
       return Container(
           height: _currentHeight,
           child: GestureDetector(
-              onTapDown: (TapDownDetails details) {
-                if (_scrollController.hasClients) {
-                  _scrollController.animateTo(_scrollController.position.pixels,
-                      duration: Duration(milliseconds: 200),
-                      curve: Curves.ease);
-                }
-              },
               onVerticalDragEnd: (DragEndDetails details) {
                 double targetHeight;
-                if (_currentHeight <= widget.halfHeight) {
+
+                if (_scrollController.position.pixels < 0.0)
+                  _scrollController.position.animateTo(0.0,
+                      duration: Duration(milliseconds: 200),
+                      curve: Curves.ease);
+
+                if (_currentHeight <= _halfHeight) {
                   if (widget.snapBelow &&
                       _scrollController.hasClients &&
                       _scrollController.position.pixels <= 0) {
                     if (_lastScrollDirection == ScrollDirection.down) {
                       targetHeight = _minimumHeight;
                     } else {
-                      targetHeight = widget.halfHeight;
+                      targetHeight = _halfHeight;
                     }
                   }
                 } else {
@@ -168,7 +272,7 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                       _scrollController.hasClients &&
                       _scrollController.position.pixels <= 0) {
                     if (_lastScrollDirection == ScrollDirection.down) {
-                      targetHeight = widget.halfHeight;
+                      targetHeight = _halfHeight;
                     } else {
                       targetHeight = _fullHeight;
                     }
@@ -181,23 +285,6 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                             targetHeight == _minimumHeight) &&
                         widget.autoPop) Navigator.pop(context);
                   });
-                } else {
-                  if (_currentHeight >= _fullHeight &&
-                      details.velocity.pixelsPerSecond.dy != 0.0) {
-                    if (_scrollController.hasClients) {
-                      double currentScroll = _scrollController.position.pixels;
-                      double veloc = details.velocity.pixelsPerSecond.dy * 0.2;
-                      double targetScroll = (currentScroll + (veloc * -1))
-                          .clamp(
-                              0.0,
-                              _scrollController.position.maxScrollExtent +
-                                  _kScrollTolerance);
-
-                      _scrollController.animateTo(targetScroll,
-                          duration: Duration(milliseconds: 1000),
-                          curve: Curves.fastOutSlowIn);
-                    }
-                  }
                 }
 
                 _lastScrollDirection = ScrollDirection.none;
@@ -207,11 +294,11 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                   _currentState = ScrollState.full;
                   if (widget.callback != null) widget.callback(_currentState);
                 } else if (_currentState == ScrollState.full &&
-                    _currentHeight <= widget.halfHeight) {
+                    _currentHeight <= _halfHeight) {
                   _currentState = ScrollState.half;
                   if (widget.callback != null) widget.callback(_currentState);
                 } else if (_currentState == ScrollState.minimum &&
-                    _currentHeight >= widget.halfHeight) {
+                    _currentHeight >= _halfHeight) {
                   _currentState = ScrollState.half;
                   if (widget.callback != null) widget.callback(_currentState);
                 } else if (_currentHeight <= widget.minimumHeight &&
@@ -219,16 +306,23 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                   _currentState = ScrollState.minimum;
                   if (widget.callback != null) widget.callback(_currentState);
                 }
+                if (_currentHeight >= _fullHeight) {
+                  _drag?.end(details);
+                }
+              },
+              onVerticalDragDown: (DragDownDetails details) {
+                _hold = _scrollController.position.hold(_disposeHold);
+              },
+              onVerticalDragCancel: () {
+                _drag?.cancel();
+                _hold?.cancel();
               },
               onVerticalDragUpdate: (DragUpdateDetails details) {
                 if (details.primaryDelta > 0) {
                   // scroll downward
                   _lastScrollDirection = ScrollDirection.down;
 
-                  if (_scrollController.offset > 0.0) {
-                    _scrollController.jumpTo(
-                        _scrollController.offset + details.primaryDelta * -1);
-                  } else {
+                  if (_scrollController.offset <= 0.0) {
                     if (_currentHeight > 0.0) {
                       if (this.mounted) {
                         setState(() {
@@ -241,31 +335,62 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                   // scroll upward
                   _lastScrollDirection = ScrollDirection.up;
 
-                  if (_currentHeight <= _fullHeight) {
+                  if (_currentHeight < _fullHeight) {
                     if (this.mounted) {
                       setState(() {
                         _currentHeight += details.primaryDelta * -1;
                       });
                     }
-                  } else {
-                    _scrollController.jumpTo(
-                        _scrollController.offset + details.primaryDelta * -1);
                   }
                 }
+
+                if (_currentHeight >= _fullHeight) {
+                  DragUpdateDetails d = details;
+
+                  if (_scrollController.offset + -d.primaryDelta < 0.0) {
+                    Offset newGlobalPosition = Offset(
+                        details.globalPosition.dx,
+                        details.globalPosition.dy +
+                            -(d.primaryDelta) +
+                            _scrollController.offset);
+                    Offset newDelta =
+                        Offset(details.delta.dx, _scrollController.offset);
+
+                    d = DragUpdateDetails(
+                        delta: newDelta,
+                        primaryDelta: _scrollController.offset,
+                        globalPosition: newGlobalPosition,
+                        sourceTimeStamp: details.sourceTimeStamp);
+                  }
+
+                  _drag?.update(d);
+                }
+              },
+              onVerticalDragStart: (DragStartDetails details) {
+                _drag = _scrollController.position.drag(details, _disposeDrag);
               },
               child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: NeverScrollableScrollPhysics(),
-                  child: Column(children: [
-                    widget.child,
-                    Container(
-                      height: widget.minimumHeight,
-                      color: Colors.transparent,
-                    )
-                  ]))));
+                  child: Builder(builder: (BuildContext c) {
+                    _headerContext = c;
+
+                    return widget.child;
+                  }))));
     });
 
     return child;
+  }
+
+  Drag _drag;
+  ScrollHoldController _hold;
+
+  void _disposeDrag() {
+    _drag = null;
+  }
+
+  void _disposeHold() {
+    _hold = null;
   }
 
   /// animate current Bottom Sheet to [minimumHeight] (if specified)
@@ -295,7 +420,7 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
   ///
   /// See [example/main.dart] for example
   animateToHalf(BuildContext context) {
-    _animateTo(widget.halfHeight);
+    _animateTo(_halfHeight);
   }
 
   /// animate current Bottom Sheet to maximum height available
@@ -340,7 +465,7 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
               zeroScale.status == AnimationStatus.completed) {
             if (targetHeight == _fullHeight) {
               _currentState = ScrollState.full;
-            } else if (targetHeight == widget.halfHeight) {
+            } else if (targetHeight == _halfHeight) {
               _currentState = ScrollState.half;
             } else if (targetHeight == widget.minimumHeight) {
               _currentState = ScrollState.minimum;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:scrollable_bottom_sheet/scrollable_bottom_sheet.dart';
+import 'package:scrollable_bottom_sheet_example/another_scrollable.dart';
 
 void main() => runApp(MyApp());
 
@@ -60,19 +61,30 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
       ),
       body: Builder(
         builder: (BuildContext context) {
-          return Stack(children: [
-            Center(
-                child: RaisedButton(
-                    onPressed: _bottomSheetActive
-                        ? null
-                        : () {
-                            setState(() {
-                              //disable button
-                              _bottomSheetActive = true;
-                            });
-                            _showBottomSheet(context);
-                          },
-                    child: const Text('Show bottom sheet'))),
+          return Column(children: [
+            Expanded(
+                child: Center(
+                    child: RaisedButton(
+                        onPressed: _bottomSheetActive
+                            ? null
+                            : () {
+                                setState(() {
+                                  //disable button
+                                  _bottomSheetActive = true;
+                                });
+                                _showBottomSheet(context);
+                              },
+                        child: const Text('Show bottom sheet')))),
+            Expanded(
+                child: Center(
+                    child: RaisedButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => AnotherScrollable()));
+                        },
+                        child: const Text('Show bottom sheet')))),
           ]);
         },
       ),
@@ -111,6 +123,7 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
         },
         child: Container(
             color: Colors.greenAccent,
+            margin: EdgeInsets.only(bottom: 50.0),
             child: Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Column(children: [

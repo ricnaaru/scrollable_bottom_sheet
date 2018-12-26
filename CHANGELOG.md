@@ -21,3 +21,11 @@
 ## 0.0.6
 
 * Fling scroll feature added
+
+## 0.0.7
+
+* Bug Fixes
+
+## 0.0.8
+
+* Scroll smoothness improved, add new feature measure minimum and half height by content

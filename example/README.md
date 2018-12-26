@@ -77,7 +77,6 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
           ]);
         },
       ),
-//        bottomNavigationBar:
     );
   }
 
@@ -113,6 +112,7 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
         },
         child: Container(
             color: Colors.greenAccent,
+            margin: EdgeInsets.only(bottom: 50.0),
             child: Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Column(children: [
@@ -170,5 +170,4 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
     });
   }
 }
-
 ```
