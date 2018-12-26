@@ -192,10 +192,12 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
   ScrollState _currentState;
   BuildContext _headerContext;
 
+  //re-set minimum height to make [ScrollableBottomSheetByContent] possible
   set minimumHeight(double newMinimumHeight) {
     _minimumHeight = newMinimumHeight;
   }
 
+  //re-set half height to make [ScrollableBottomSheetByContent] possible
   set halfHeight(double newHalfHeight) {
     _halfHeight = newHalfHeight;
   }
