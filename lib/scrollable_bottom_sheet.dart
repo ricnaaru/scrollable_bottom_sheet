@@ -296,7 +296,7 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                   _currentState = ScrollState.full;
                   if (widget.callback != null) widget.callback(_currentState);
                 } else if (_currentState == ScrollState.full &&
-                    _currentHeight <= _halfHeight) {
+                    _currentHeight < _halfHeight) {
                   _currentState = ScrollState.half;
                   if (widget.callback != null) widget.callback(_currentState);
                 } else if (_currentState == ScrollState.minimum &&
@@ -369,7 +369,9 @@ class ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                 }
               },
               onVerticalDragStart: (DragStartDetails details) {
-                _drag = _scrollController.position.drag(details, _disposeDrag);
+                if (_scrollController.position.maxScrollExtent > 0.0)
+                  _drag =
+                      _scrollController.position.drag(details, _disposeDrag);
               },
               child: SingleChildScrollView(
                   controller: _scrollController,

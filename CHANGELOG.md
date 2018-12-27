@@ -29,3 +29,7 @@
 ## 0.0.8
 
 * Scroll smoothness improved, add new feature measure minimum and half height by content
+
+## 0.0.9
+
+* Minor bug Fixes

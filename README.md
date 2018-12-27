@@ -7,7 +7,7 @@ This is a temporary workaround to achieve Scrollable Persistent Bottom Sheet tha
 First, add `scrollable_bottom_sheet` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
 
 ```
-scrollable_bottom_sheet: ^0.0.8
+scrollable_bottom_sheet: ^0.0.9
 ```
 
 ## Example

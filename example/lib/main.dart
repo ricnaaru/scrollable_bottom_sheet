@@ -94,7 +94,6 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
   Widget _bottomSheetBuilder(BuildContext context) {
     final key = new GlobalKey<ScrollableBottomSheetState>();
     final ThemeData themeData = Theme.of(context);
-    AnimationController animationController = AnimationController(vsync: this);
 
     return Stack(children: [
       ScrollableBottomSheet(
