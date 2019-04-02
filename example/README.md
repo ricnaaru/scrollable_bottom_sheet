@@ -1,6 +1,8 @@
 ```
 import 'package:flutter/material.dart';
 import 'package:scrollable_bottom_sheet/scrollable_bottom_sheet.dart';
+import 'package:scrollable_bottom_sheet/scrollable_controller.dart';
+import 'package:scrollable_bottom_sheet_example/another_scrollable.dart';
 
 void main() => runApp(MyApp());
 
@@ -16,11 +18,11 @@ class BottomSheetDemo extends StatefulWidget {
   _BottomSheetDemoState createState() => _BottomSheetDemoState();
 }
 
-class _BottomSheetDemoState extends State<BottomSheetDemo>
-    with TickerProviderStateMixin {
+class _BottomSheetDemoState extends State<BottomSheetDemo> with TickerProviderStateMixin {
   bool _bottomSheetActive = false;
   String _currentState = "initial";
   String _currentDirection = "up";
+  final controller = ScrollableController();
 
   void _showMessage(BuildContext context) {
     showDialog<void>(
@@ -61,19 +63,27 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
       ),
       body: Builder(
         builder: (BuildContext context) {
-          return Stack(children: [
-            Center(
-                child: RaisedButton(
-                    onPressed: _bottomSheetActive
-                        ? null
-                        : () {
-                            setState(() {
-                              //disable button
-                              _bottomSheetActive = true;
-                            });
-                            _showBottomSheet(context);
-                          },
-                    child: const Text('Show bottom sheet'))),
+          return Column(children: [
+            Expanded(
+                child: Center(
+                    child: RaisedButton(
+                        onPressed: _bottomSheetActive
+                            ? null
+                            : () {
+                                setState(() {
+                                  //disable button
+                                  _bottomSheetActive = true;
+                                });
+                                _showBottomSheet(context);
+                              },
+                        child: const Text('Show bottom sheet')))),
+            Expanded(
+                child: Center(
+                    child: RaisedButton(
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => AnotherScrollable()));
+                        },
+                        child: const Text('Show bottom sheet')))),
           ]);
         },
       ),
@@ -81,13 +91,11 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
   }
 
   Widget _bottomSheetBuilder(BuildContext context) {
-    final key = new GlobalKey<ScrollableBottomSheetState>();
     final ThemeData themeData = Theme.of(context);
-    AnimationController animationController = AnimationController(vsync: this);
 
     return Stack(children: [
       ScrollableBottomSheet(
-        key: key,
+        controller: controller,
         halfHeight: 250.0,
         minimumHeight: 50.0,
         autoPop: false,
@@ -119,14 +127,11 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
                   InkWell(
                     child: Container(color: Colors.red, height: 57.0),
                     onTap: () {
-                      key.currentState.animateToZero(context, willPop: true);
+                      controller.animateToZero(context, willPop: true);
                     },
                   ),
-                  Text(
-                      'This is a Material persistent bottom sheet. Drag downwards to dismiss it.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: themeData.accentColor, fontSize: 24.0)),
+                  Text('This is a Material persistent bottom sheet. Drag downwards to dismiss it.',
+                      textAlign: TextAlign.center, style: TextStyle(color: themeData.accentColor, fontSize: 24.0)),
                   Column(
                       children: List.generate(100, (index) {
                     return Text("Text $index");
@@ -145,12 +150,12 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
                 onPressed: () {
                   if (_currentState == "half") {
                     if (_currentDirection == "up") {
-                      key.currentState.animateToFull(context);
+                      controller.animateToFull(context);
                     } else {
-                      key.currentState.animateToMinimum(context);
+                      controller.animateToMinimum(context);
                     }
                   } else {
-                    key.currentState.animateToHalf(context);
+                    controller.animateToHalf(context);
                   }
                 }),
           ))
@@ -158,9 +163,7 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
   }
 
   _showBottomSheet(BuildContext context) {
-    showBottomSheet<void>(context: context, builder: _bottomSheetBuilder)
-        .closed
-        .whenComplete(() {
+    showBottomSheet<void>(context: context, builder: _bottomSheetBuilder).closed.whenComplete(() {
       if (mounted) {
         setState(() {
           // re-enable the button
@@ -170,4 +173,5 @@ class _BottomSheetDemoState extends State<BottomSheetDemo>
     });
   }
 }
+
 ```

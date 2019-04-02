@@ -2,15 +2,16 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:scrollable_bottom_sheet/scrollable_bottom_sheet.dart';
+import 'package:scrollable_bottom_sheet/scrollable_controller.dart';
 
 class AnotherScrollable extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _AnotherScrollableState();
 }
 
-class _AnotherScrollableState extends State<AnotherScrollable>
-    with TickerProviderStateMixin {
+class _AnotherScrollableState extends State<AnotherScrollable> with TickerProviderStateMixin {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  final ScrollableController controller = ScrollableController();
 
   @override
   void initState() {
@@ -51,8 +52,7 @@ class _AnotherScrollableState extends State<AnotherScrollable>
     math.Random random = math.Random();
 
     orders = List.generate(random.nextInt(100), (index) {
-      return Order(randomFruits[random.nextInt(randomFruits.length - 1)],
-          random.nextInt(100));
+      return Order(randomFruits[random.nextInt(randomFruits.length - 1)], random.nextInt(100));
     });
 
     return Scaffold(
@@ -92,14 +92,12 @@ class _AnotherScrollableState extends State<AnotherScrollable>
   }
 
   Widget _bottomSheetBuilder(BuildContext context) {
-    final key = new GlobalKey<ScrollableBottomSheetState>();
-
     return ScrollableBottomSheetByContent(
       _buildHeader(context),
       _buildContent(),
       autoPop: false,
       scrollTo: ScrollState.minimum,
-      key: key,
+      controller: controller,
     );
   }
 
@@ -109,17 +107,10 @@ class _AnotherScrollableState extends State<AnotherScrollable>
         padding: EdgeInsets.all(16.0),
         color: Theme.of(context).primaryColor,
         child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-              child: Icon(Icons.shopping_cart, color: Colors.white), margin: EdgeInsets.all(8.0)),
+          Container(child: Icon(Icons.shopping_cart, color: Colors.white), margin: EdgeInsets.all(8.0)),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text("You've got order",
-                style: Theme.of(context)
-                    .primaryTextTheme
-                    .title),
-            Text("Swipe up for details",
-                style: Theme.of(context)
-                    .primaryTextTheme
-                    .body1)
+            Text("You've got order", style: Theme.of(context).primaryTextTheme.title),
+            Text("Swipe up for details", style: Theme.of(context).primaryTextTheme.body1)
           ])
         ]));
   }
@@ -131,8 +122,7 @@ class _AnotherScrollableState extends State<AnotherScrollable>
         children: orders.map((order) {
       List<Widget> children = [];
 
-      children.add(ListTile(
-          title: Text(order.name), subtitle: Text("Qty: ${order.qty} pcs")));
+      children.add(ListTile(title: Text(order.name), subtitle: Text("Qty: ${order.qty} pcs")));
 
       if (counter < orders.length) {
         children.add(Container(color: Colors.black38, height: 0.5));
