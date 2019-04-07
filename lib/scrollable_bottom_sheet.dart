@@ -293,6 +293,8 @@ class _ScrollableBottomSheetState extends State<ScrollableBottomSheet>
                 }
                 if (_currentHeight >= _fullHeight) {
                   _drag?.end(details);
+                } else {
+                  _drag?.cancel();
                 }
               },
               onVerticalDragDown: (DragDownDetails details) {
