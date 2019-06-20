@@ -1,3 +1,7 @@
+## 0.2.1
+
+* Cancel drag when not full height (by joserocha3)
+
 ## 0.2.0+1
 
 * Updating README

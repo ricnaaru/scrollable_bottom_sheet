@@ -1,6 +1,6 @@
 name: scrollable_bottom_sheet
 description: Simple Scrollable Persistent Bottom Sheet using GestureDetector
-version: 0.2.0+1
+version: 0.2.1
 author: Richardo <richardothayeb@gmail.com>
 homepage: https://github.com/ricnaaru/scrollable_bottom_sheet/tree/master
 
