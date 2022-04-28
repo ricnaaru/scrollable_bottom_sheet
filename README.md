@@ -178,3 +178,14 @@ class _BottomSheetDemoState extends State<BottomSheetDemo> with TickerProviderSt
   }
 }
 ```
+
+
+## Future developments
+- More testing and bug fixing
+
+## Support
+This repository isn't maintained that well, but I will try to keep it well-maintained as much as possible. Please consider support me..
+
+[![Buy me a coffee](https://www.buymeacoffee.com/assets/img/custom_images/white_img.png)](https://www.buymeacoffee.com/rthayeb)
+
+<br>
